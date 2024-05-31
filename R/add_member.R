@@ -12,6 +12,7 @@
 #' @param ... not used at the moment.
 #' @returns a [simple_ensemble] with additional member(s)
 #' @export
+#' @keywords ensemble
 
 # Note that `add_member` is tested in `test_simple_ensemble.R`
 
@@ -31,10 +32,7 @@ add_member.default <- function(x, member, ...) {
 add_member.tune_results <- function(x, member, metric = NULL, id = NULL, ...) {
   # set the metric if the simple ensemble is empty (and thus has no metric)
   if (is.null(attr(x, "best_metric"))) {
-    attr(x, "best_metric") <- utils::getFromNamespace(
-      "choose_metric",
-      "tune"
-    )(metric, member)
+    attr(x, "best_metric") <- tidydsm_choose_metric(metric, member)
   }
 
   # if metric is NULL
@@ -57,7 +55,7 @@ add_member.tune_results <- function(x, member, metric = NULL, id = NULL, ...) {
   }
 
   # get the best config, metric, etc.
-  best_config <- tune::select_best(member, metric)$.config
+  best_config <- tune::select_best(member, metric = metric)$.config
   best_metrics <- tune::collect_metrics(member) %>%
     dplyr::filter(.data$.config == best_config) %>%
     dplyr::select(dplyr::all_of(c(".metric", "mean", "std_err", "n"))) %>%
@@ -93,4 +91,18 @@ add_member.workflow_set <- function(x, member, metric = NULL, ...) {
     x <- x %>% add_member(this_res, metric = metric, id = i_wflow)
   }
   x
+}
+
+
+tidydsm_choose_metric <- function (metric, x) {
+  if (is.null(metric)) {
+    metric_vals <- tune::.get_tune_metric_names(x)
+    metric <- metric_vals[1]
+    if (length(metric_vals) > 1) {
+      msg <- paste0("No value of `metric` was given; metric '",
+                    metric, "' ", "will be used.")
+      rlang::warn(msg)
+    }
+  }
+  metric
 }

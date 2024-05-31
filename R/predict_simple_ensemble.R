@@ -1,7 +1,7 @@
 #' Predict for a simple ensemble set
 #'
 #' Predict for a new dataset by using a simple ensemble. Predictions from individual
-#' models are combined according to `fun`
+#' models (i.e. workflows) are combined according to `fun`
 #' @param object an simple_ensemble object
 #' @param new_data a data frame in which to look for variables with which to predict.
 #' @param type the type of prediction, "prob" or "class".
@@ -27,6 +27,8 @@
 #' @returns a tibble of predictions
 #' @method predict simple_ensemble
 #' @export
+#' @keywords predict
+
 predict.simple_ensemble <-
   function(object,
            new_data,
@@ -54,30 +56,38 @@ predict.simple_ensemble <-
         message("as no 'threshold' was defined, a default of 0.5 will be used")
         class_thresh <- 0.5
       }
-
-      # check that we have an entry for this calibration
-      ref_calib_tb <- attr(object, "class_thresholds")
-      # give up immediately if ref_calib_tb is null
-      if (is.null(ref_calib_tb)) {
-        stop(
-          "this model needs to be first calibrated before classes can be produced\n",
-          "use 'calib_class_thresh()' first"
-        )
-      } else if (!any(unlist(lapply(ref_calib_tb %>% dplyr::pull("metric_thresh"), identical, metric_thresh)) &
-        unlist(lapply(ref_calib_tb %>% dplyr::pull("class_thresh"), identical, class_thresh)))) {
-        stop(
-          "this model needs to be first calibrated before classes can be produced\n",
-          "use 'calib_class_thresh()' first"
-        )
+      
+      # if the class_threshold is not numeric, then we need to ensure the model has been calibrated for the right metric
+      if (!is.numeric(class_thresh)){
+        # check that we have an entry for this calibration
+        ref_calib_tb <- attr(object, "class_thresholds")
+        # give up immediately if ref_calib_tb is null
+        if (is.null(ref_calib_tb)) {
+          stop(
+            "this model needs to be first calibrated before classes can be produced\n",
+            "use 'calib_class_thresh()' first"
+          )
+        } else if (!any(unlist(lapply(ref_calib_tb %>% dplyr::pull("metric_thresh"), identical, metric_thresh)) &
+                        unlist(lapply(ref_calib_tb %>% dplyr::pull("class_thresh"), identical, class_thresh)))) {
+          stop(
+            "this model needs to be first calibrated before classes can be produced\n",
+            "use 'calib_class_thresh()' first"
+          )
+        }
+        
+        
+        # subset the calibration thresholds
+        ref_calib_tb <- ref_calib_tb[
+          (unlist(lapply(ref_calib_tb %>% dplyr::pull("metric_thresh"), identical, metric_thresh)) &
+             unlist(lapply(ref_calib_tb %>% dplyr::pull("class_thresh"), identical, class_thresh))) &
+            ref_calib_tb$fun %in% fun,
+        ]       
+      } else { #if class_thresh is numeric, fake a calib table
+        ref_calib_tb <- tibble::tibble(fun = fun,
+                               optim_value = rep(class_thresh, length(fun)))
       }
 
-
-      # subset the calibration thresholds
-      ref_calib_tb <- ref_calib_tb[
-        (unlist(lapply(ref_calib_tb %>% dplyr::pull("metric_thresh"), identical, metric_thresh)) &
-          unlist(lapply(ref_calib_tb %>% dplyr::pull("class_thresh"), identical, class_thresh))) &
-          ref_calib_tb$fun %in% fun,
-      ]
+      #browser()
       class_levels <- levels(workflows::extract_mold((object$workflow[[1]]))$outcome %>% dplyr::pull(1))
     }
 
