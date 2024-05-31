@@ -50,7 +50,7 @@ devtools::install_github("EvolEcolGroup/tidysdm", ref = "dev")
 
 ## Overview of functionality
 
-On its dedicated [website](https://evolecolgroup.github.io/tidysdm/),
+On its dedicated [website](https://evolecolgroup.github.io/tidysdm/) https://evolecolgroup.github.io/tidysdm/,
 you can find Articles giving you a step-by-step [overview of the
 fitting SDMs to contemporary species](https://evolecolgroup.github.io/tidysdm/articles/a0_tidysdm_overview.html),
 as well as an equivalent [tutorial for using palaeontological data](https://evolecolgroup.github.io/tidysdm/articles/a1_palaeodata_application.html).
@@ -58,7 +58,7 @@ Furthermore, there is an [Article with examples of how to leverage various
 features of tidymodels](https://evolecolgroup.github.io/tidysdm/dev/articles/a2_tidymodels_additions.html) that are not commonly adopted in SDM pipelines
 
 There is also a [dev
-version](https://evolecolgroup.github.io/tidysdm/dev/) (or here: https://evolecolgroup.github.io/tidysdm/dev/ ) of the site
+version](https://evolecolgroup.github.io/tidysdm/dev/) (or here: https://tinyurl.com/tidysdm-dev-website) of the site
 updated for the `dev` branch of `tidysdm` (on the top left of the dev
 website, the version number is in red and in the format x.x.x.9xxx,
 indicating it is a development version). If you want to contribute, make
